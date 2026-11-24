@@ -6,7 +6,7 @@ import android.net.Uri
 
 fun openGithubIssues(): Intent =
     Intent(ACTION_VIEW).also {
-        it.data = Uri.parse("https://github.com/themonkeyloverissudo/Feeder/issues")
+        it.data = Uri.parse("https://github.com/zacro/Feeder/issues")
     }
 
 const val KOFI_URL = "https://ko-fi.com/spacecowboy"
