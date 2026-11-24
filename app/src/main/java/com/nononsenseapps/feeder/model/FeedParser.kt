@@ -467,6 +467,9 @@ private fun OkHttpClient.newFeedCall(
 
     if (trustAllCertificates) {
         builder.trustAllCerts()
+        // StackWatch: unverified responses must never land in the shared HTTP cache, where a
+        // forged redirect target could later be served to normally verified feeds.
+        builder.cache(null)
     }
 
     return builder.build().newCall(request)

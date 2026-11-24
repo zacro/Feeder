@@ -201,7 +201,7 @@ class RssLocalSync(
             ).onLeft { feedParserError ->
                 Log.e(
                     LOG_TAG,
-                    "Failed to sync ${feed.displayTitle}: ${feed.url} because:\n${feedParserError.description}",
+                    "Failed to sync ${feed.displayTitle}: ${feed.url.host} because:\n${feedParserError.description}",
                 )
 
                 // Handle retry-after
@@ -221,7 +221,7 @@ class RssLocalSync(
             if (e is CancellationException) throw e
             Log.e(
                 LOG_TAG,
-                "Failed to sync ${feed.displayTitle}: ${feed.url}",
+                "Failed to sync ${feed.displayTitle}: ${feed.url.host}",
                 e,
             )
         } finally {

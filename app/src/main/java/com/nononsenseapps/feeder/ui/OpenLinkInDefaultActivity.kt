@@ -59,7 +59,7 @@ class OpenLinkInDefaultActivity : DIAwareComponentActivity() {
     }
 
     private fun handleNotificationActions(intent: Intent) {
-        val id: Long = intent.data?.lastPathSegment?.toLong() ?: ID_UNSET
+        val id: Long = intent.data?.lastPathSegment?.toLongOrNull() ?: ID_UNSET
         val link: String? = intent.data?.getQueryParameter(COL_LINK)
 
         lifecycleScope.launch {

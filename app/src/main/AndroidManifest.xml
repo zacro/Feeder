@@ -25,7 +25,8 @@
   <permission
     android:name="${applicationId}.permission.read"
     android:description="@string/permission_read_desc"
-    android:label="@string/permission_read_label" />
+    android:label="@string/permission_read_label"
+    android:protectionLevel="dangerous" />
 
   <queries>
     <!-- So a barcode scanner can be invoked -->
@@ -163,7 +164,7 @@
 
     <activity
       android:name=".ui.OpenLinkInDefaultActivity"
-      android:exported="true"
+      android:exported="false"
       android:label="@string/open_link_in_browser"
       android:launchMode="singleInstance"
       android:taskAffinity="${applicationId}.OpenLinkTask" />
