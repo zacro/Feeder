@@ -45,7 +45,6 @@ class VulnsViewModel(
 
     private val stackFilter = MutableStateFlow<Long?>(null)
     private val hideNotAffected = MutableStateFlow(false)
-    private val rescanning = MutableStateFlow(false)
 
     val viewState: StateFlow<VulnsViewState> =
         combine(
@@ -53,7 +52,7 @@ class VulnsViewModel(
             vulnDao.observeAlerts(),
             stackFilter,
             hideNotAffected,
-            rescanning,
+            vulnScanner.rescanning,
         ) { stack, alerts, filter, hide, scanning ->
             // Drop a filter that points at a deleted stack item
             val activeFilter = filter?.takeIf { id -> stack.any { it.id == id } }
@@ -105,7 +104,7 @@ class VulnsViewModel(
             } else {
                 vulnDao.updateStackItem(cleaned)
             }
-            rescan()
+            vulnScanner.requestRescan()
         }
     }
 
@@ -171,7 +170,7 @@ class VulnsViewModel(
                 toInsert.forEach { vulnDao.insertStackItem(it) }
                 toastMaker.makeToast(R.string.vuln_import_done)
                 if (toUpdate.isNotEmpty() || toInsert.isNotEmpty()) {
-                    rescan()
+                    vulnScanner.requestRescan()
                 }
             } catch (e: Exception) {
                 if (e is CancellationException) throw e
@@ -182,16 +181,7 @@ class VulnsViewModel(
     }
 
     fun requestRescan() {
-        applicationCoroutineScope.launch { rescan() }
-    }
-
-    private suspend fun rescan() {
-        rescanning.value = true
-        try {
-            vulnScanner.rescanAll()
-        } finally {
-            rescanning.value = false
-        }
+        vulnScanner.requestRescan()
     }
 }
 

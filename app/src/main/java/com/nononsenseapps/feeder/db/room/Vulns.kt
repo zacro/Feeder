@@ -130,6 +130,12 @@ interface VulnDao {
 
     // ---- Matches ----
 
+    @Query("SELECT DISTINCT feed_item_id FROM $VULN_MATCHES_TABLE_NAME")
+    suspend fun getMatchedFeedItemIds(): List<Long>
+
+    @Query("SELECT DISTINCT feed_item_id FROM $VULN_MATCHES_TABLE_NAME WHERE feed_item_id IN (:ids)")
+    suspend fun getMatchedFeedItemIdsIn(ids: List<Long>): List<Long>
+
     @Query("SELECT * FROM $VULN_MATCHES_TABLE_NAME WHERE feed_item_id = :feedItemId")
     suspend fun getMatchesForItem(feedItemId: Long): List<VulnMatchEntity>
 
@@ -225,15 +231,16 @@ interface VulnDao {
                 val id = insertMatch(m)
                 if (id > 0) created += m.copy(id = id)
             } else {
-                updateMatch(
+                val updated =
                     m.copy(
                         id = old.id,
                         notified = old.notified || m.notified,
                         seen = old.seen,
                         dismissed = old.dismissed,
                         matchedAt = old.matchedAt,
-                    ),
-                )
+                    )
+                // Skip no-op writes: they would needlessly invalidate observing queries
+                if (updated != old) updateMatch(updated)
             }
         }
         return created

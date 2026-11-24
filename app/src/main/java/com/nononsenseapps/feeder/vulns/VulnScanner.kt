@@ -13,6 +13,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.core.net.toUri
+import com.nononsenseapps.feeder.ApplicationCoroutineScope
 import com.nononsenseapps.feeder.R
 import com.nononsenseapps.feeder.blob.blobInputStream
 import com.nononsenseapps.feeder.db.room.VulnDao
@@ -24,7 +25,14 @@ import com.nononsenseapps.feeder.util.DEEP_LINK_BASE_URI
 import com.nononsenseapps.feeder.util.FilePathProvider
 import com.nononsenseapps.feeder.util.logDebug
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
@@ -54,8 +62,43 @@ class VulnScanner(
     private val vulnDao: VulnDao by instance()
     private val filePathProvider: FilePathProvider by instance()
     private val application: Application by instance()
+    private val applicationCoroutineScope: ApplicationCoroutineScope by instance()
 
     private val mutex = Mutex()
+
+    private val rescanningState = MutableStateFlow(false)
+
+    /** True while a full rescan is running. */
+    val rescanning: StateFlow<Boolean> = rescanningState.asStateFlow()
+
+    private val rescanLock = Any()
+    private var rescanJob: Job? = null
+
+    /**
+     * Start a full rescan in the background. A rescan already in progress is cancelled first, so
+     * several quick stack edits cost one rescan instead of queueing one each.
+     */
+    fun requestRescan() {
+        synchronized(rescanLock) {
+            rescanJob?.cancel()
+            val job =
+                applicationCoroutineScope.launch(start = CoroutineStart.LAZY) {
+                    rescanningState.value = true
+                    try {
+                        rescanAll()
+                    } finally {
+                        synchronized(rescanLock) {
+                            // Only the latest request clears the flag
+                            if (rescanJob === coroutineContext[Job]) {
+                                rescanningState.value = false
+                            }
+                        }
+                    }
+                }
+            rescanJob = job
+            job.start()
+        }
+    }
 
     private fun VulnStackItem.toSpec() =
         StackItemSpec(
@@ -75,10 +118,14 @@ class VulnScanner(
                     if (stack.isEmpty()) return@withLock
                     val stackById = stack.associateBy { it.id }
                     val toNotify = mutableListOf<Pair<VulnMatchEntity, ScanInput>>()
+                    val alreadyMatched = vulnDao.getMatchedFeedItemIdsIn(items.map { it.feedItemId }).toHashSet()
+                    val converter = HtmlToPlainTextConverter()
 
                     for (item in items) {
-                        val body = htmlToText(item.html)
+                        val body = htmlToText(item.html, converter)
                         val matches = VulnMatcher.analyze(item.title, body, stack)
+                        // Nothing stored and nothing found: no database work needed
+                        if (matches.isEmpty() && item.feedItemId !in alreadyMatched) continue
                         val created =
                             vulnDao.replaceMatchesForItem(
                                 item.feedItemId,
@@ -110,21 +157,26 @@ class VulnScanner(
             withContext(Dispatchers.IO) {
                 mutex.withLock {
                     val stack = vulnDao.getStackItems().map { it.toSpec() }
+                    val alreadyMatched = vulnDao.getMatchedFeedItemIds().toHashSet()
+                    val converter = HtmlToPlainTextConverter()
                     var offset = 0
                     var count = 0
                     while (true) {
                         val page = vulnDao.getScanCandidates(limit = PAGE_SIZE, offset = offset)
                         if (page.isEmpty()) break
                         for (candidate in page) {
+                            // Stops promptly when a newer rescan replaces this one
+                            ensureActive()
                             val matches =
                                 if (stack.isEmpty()) {
                                     emptyList()
                                 } else {
                                     val body =
-                                        readArticleText(candidate.id)
+                                        readArticleText(candidate.id, converter)
                                             ?: candidate.plainSnippet
                                     VulnMatcher.analyze(candidate.plainTitle, body, stack)
                                 }
+                            if (matches.isEmpty() && candidate.id !in alreadyMatched) continue
                             // Rescans never notify: store them as already notified
                             vulnDao.replaceMatchesForItem(
                                 candidate.id,
@@ -143,22 +195,29 @@ class VulnScanner(
         }
     }
 
-    private fun readArticleText(itemId: Long): String? =
+    private fun readArticleText(
+        itemId: Long,
+        converter: HtmlToPlainTextConverter,
+    ): String? =
         try {
             blobInputStream(itemId, filePathProvider.articleDir)
                 .bufferedReader()
                 .use { it.readText() }
-                .let { htmlToText(it) }
+                .let { htmlToText(it, converter) }
         } catch (e: Exception) {
             null
         }
 
-    private fun htmlToText(html: String): String =
+    /** [converter] is reused within one scan (building its parser is costly); not thread safe. */
+    private fun htmlToText(
+        html: String,
+        converter: HtmlToPlainTextConverter,
+    ): String =
         if (html.isBlank()) {
             ""
         } else {
             try {
-                HtmlToPlainTextConverter().convert(html)
+                converter.convert(html)
             } catch (e: Exception) {
                 html
             }
