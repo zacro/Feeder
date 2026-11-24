@@ -130,6 +130,13 @@ android {
                 val stackwatchRevision = 1
                 versionCode = (defaultConfig.versionCode ?: 0) * 100 + stackwatchRevision
                 versionNameSuffix = "-sw$stackwatchRevision"
+                // StackWatch: only ship native code for 64-bit ARM (Pixel 8 / Tensor G3 and every
+                // modern phone). Drops ~25 MB of x86/x86_64/armv7 libraries from the APK.
+                // Note: x86_64 emulators can no longer run this build; ARM emulators on Apple
+                // Silicon Macs still can.
+                ndk {
+                    abiFilters += "arm64-v8a"
+                }
             }
             create("play") {
                 dimension = "store"
