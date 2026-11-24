@@ -179,6 +179,26 @@ object VulnMatcher {
             RegexOption.IGNORE_CASE,
         )
 
+    /**
+     * Upper bound on analysed text. Advisories put the product, CVE ids and severity near the top;
+     * the cap bounds the cost of hostile or huge feed entries.
+     */
+    const val MAX_TEXT_LENGTH = 100_000
+
+    private val whitespaceRegex = Regex("""\s+""")
+
+    /**
+     * Collapse whitespace runs (including nbsp, tabs) to a single space and cap the length.
+     * Required for safety: several patterns contain adjacent `\s*`, which backtrack
+     * quadratically on long whitespace runs.
+     */
+    fun normalize(text: String): String =
+        text
+            .take(MAX_TEXT_LENGTH * 2)
+            .replace('\u00A0', ' ')
+            .replace(whitespaceRegex, " ")
+            .take(MAX_TEXT_LENGTH)
+
     private val termRegexCache = HashMap<String, Regex>()
 
     /** Compile a whole-word, case-insensitive regex for a term. Spaces/hyphens/underscores are interchangeable. */
@@ -234,7 +254,7 @@ object VulnMatcher {
         stack: List<StackItemSpec>,
     ): List<VulnMatch> {
         if (stack.isEmpty()) return emptyList()
-        val text = "$title\n$body"
+        val text = normalize("$title\n$body")
         if (!isSecurityRelated(text)) return emptyList()
 
         var severityAndCvss: Pair<Severity, Double?>? = null

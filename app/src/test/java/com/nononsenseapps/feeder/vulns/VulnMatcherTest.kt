@@ -199,4 +199,23 @@ class VulnMatcherTest {
         assertEquals(setOf(1L, 2L), m.map { it.stackItemId }.toSet())
         assertEquals(listOf("CVE-2024-11111", "CVE-2024-22222"), m[0].cves)
     }
+
+    @Test
+    fun hostileWhitespaceIsFast() {
+        // Regression: long whitespace runs used to make severity/CVSS regexes quadratic
+        val body =
+            "Linux vulnerability. severity" + " ".repeat(500_000) + "x CVSS" + "\u00A0".repeat(500_000) +
+                "x\t".repeat(100_000)
+        val start = System.nanoTime()
+        val m = VulnMatcher.analyze("Linux CVE-2024-1", body, listOf(StackItemSpec(1, "Linux")))
+        val ms = (System.nanoTime() - start) / 1_000_000
+        assertEquals(1, m.size)
+        assertTrue(ms < 2_000, "took $ms ms")
+    }
+
+    @Test
+    fun normalizeCollapsesAndCaps() {
+        assertEquals("a b c", VulnMatcher.normalize("a \t\n\u00A0 b\u00A0\u00A0c"))
+        assertEquals(VulnMatcher.MAX_TEXT_LENGTH, VulnMatcher.normalize("x".repeat(1_000_000)).length)
+    }
 }
