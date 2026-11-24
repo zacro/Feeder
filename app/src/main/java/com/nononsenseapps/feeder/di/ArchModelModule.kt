@@ -32,6 +32,8 @@ import com.nononsenseapps.feeder.ui.compose.feedarticle.FeedViewModel
 import com.nononsenseapps.feeder.ui.compose.searchfeed.SearchFeedViewModel
 import com.nononsenseapps.feeder.ui.compose.settings.SettingsViewModel
 import com.nononsenseapps.feeder.ui.compose.settings.TextSettingsViewModel
+import com.nononsenseapps.feeder.vulns.VulnScanner
+import com.nononsenseapps.feeder.vulns.VulnsViewModel
 import com.nononsenseapps.feeder.widget.FeedWidgetSettingsActivityViewModel
 import kotlinx.serialization.json.Json
 import org.kodein.di.DI
@@ -51,6 +53,7 @@ val archModelModule =
         bind<FontStore>() with singleton { FontStore(di) }
         bind<FeedItemStore>() with singleton { FeedItemStore(di) }
         bind<SyncRemoteStore>() with singleton { SyncRemoteStore(di) }
+        bind<VulnScanner>() with singleton { VulnScanner(di) }
         bind<OPMLParserHandler>() with singleton { OPMLImporter(di) }
         bind<BergamotModelManager>() with singleton { BergamotModelManager(di) }
         bind<BergamotWebTranslator>() with singleton { BergamotWebTranslator(di) }
@@ -82,4 +85,5 @@ val archModelModule =
         bindWithComposableViewModelScope<FeedViewModel>()
         bindWithComposableViewModelScope<NavigationDeepLinkViewModel>()
         bindWithComposableViewModelScope<TextSettingsViewModel>()
+        bindWithComposableViewModelScope<VulnsViewModel>()
     }

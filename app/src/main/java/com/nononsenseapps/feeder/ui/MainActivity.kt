@@ -35,6 +35,7 @@ import com.nononsenseapps.feeder.ui.compose.navigation.SearchFeedDestination
 import com.nononsenseapps.feeder.ui.compose.navigation.SettingsDestination
 import com.nononsenseapps.feeder.ui.compose.navigation.SyncScreenDestination
 import com.nononsenseapps.feeder.ui.compose.navigation.TextSettingsDestination
+import com.nononsenseapps.feeder.ui.compose.navigation.VulnsDestination
 import com.nononsenseapps.feeder.ui.compose.utils.withAllProviders
 import com.nononsenseapps.feeder.util.isLanLocalAddress
 import com.nononsenseapps.feeder.util.resolvesToLanLocalAddress
@@ -175,6 +176,7 @@ class MainActivity : DIAwareComponentActivity() {
             SyncScreenDestination.register(this, navController, navDrawerListState, mainActivityViewModel)
             // Add Fonts
             TextSettingsDestination.register(this, navController, navDrawerListState, mainActivityViewModel)
+            VulnsDestination.register(this, navController, navDrawerListState, mainActivityViewModel)
         }
 
         DisposableEffect(navController) {

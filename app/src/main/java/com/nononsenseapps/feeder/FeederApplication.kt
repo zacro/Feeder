@@ -29,6 +29,7 @@ import com.nononsenseapps.feeder.db.room.RemoteFeedDao
 import com.nononsenseapps.feeder.db.room.RemoteReadMarkDao
 import com.nononsenseapps.feeder.db.room.SyncDeviceDao
 import com.nononsenseapps.feeder.db.room.SyncRemoteDao
+import com.nononsenseapps.feeder.db.room.VulnDao
 import com.nononsenseapps.feeder.di.androidModule
 import com.nononsenseapps.feeder.di.archModelModule
 import com.nononsenseapps.feeder.di.networkModule
@@ -87,6 +88,7 @@ class FeederApplication :
         bind<RemoteFeedDao>() with singleton { instance<AppDatabase>().remoteFeedDao() }
         bind<SyncDeviceDao>() with singleton { instance<AppDatabase>().syncDeviceDao() }
         bind<BlocklistDao>() with singleton { instance<AppDatabase>().blocklistDao() }
+        bind<VulnDao>() with singleton { instance<AppDatabase>().vulnDao() }
 
         import(androidModule)
 

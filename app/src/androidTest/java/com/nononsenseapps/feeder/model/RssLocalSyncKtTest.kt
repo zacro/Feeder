@@ -28,6 +28,7 @@ import com.nononsenseapps.feeder.db.room.RemoteReadMark
 import com.nononsenseapps.feeder.db.room.RemoteReadMarkDao
 import com.nononsenseapps.feeder.db.room.SyncRemote
 import com.nononsenseapps.feeder.db.room.SyncRemoteDao
+import com.nononsenseapps.feeder.db.room.VulnDao
 import com.nononsenseapps.feeder.di.networkModule
 import com.nononsenseapps.feeder.model.Feeds.Companion.RSS_WITH_DUPLICATE_GUIDS
 import com.nononsenseapps.feeder.model.Feeds.Companion.cowboyAtom
@@ -39,6 +40,7 @@ import com.nononsenseapps.feeder.util.DoNotUseInProd
 import com.nononsenseapps.feeder.util.FilePathProvider
 import com.nononsenseapps.feeder.util.filePathProvider
 import com.nononsenseapps.feeder.util.minusMinutes
+import com.nononsenseapps.feeder.vulns.VulnScanner
 import com.nononsenseapps.jsonfeed.cachingHttpClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -88,6 +90,8 @@ class RssLocalSyncKtTest : DIAware {
         bind<FeedDao>() with singleton { testDb.db.feedDao() }
         bind<FeedItemDao>() with singleton { testDb.db.feedItemDao() }
         bind<BlocklistDao>() with singleton { testDb.db.blocklistDao() }
+        bind<VulnDao>() with singleton { testDb.db.vulnDao() }
+        bind<VulnScanner>() with singleton { VulnScanner(di) }
         bind<RemoteReadMarkDao>() with singleton { testDb.db.remoteReadMarkDao() }
         bind<ReadStatusSyncedDao>() with singleton { testDb.db.readStatusSyncedDao() }
         bind<SyncRemoteDao>() with singleton { testDb.db.syncRemoteDao() }

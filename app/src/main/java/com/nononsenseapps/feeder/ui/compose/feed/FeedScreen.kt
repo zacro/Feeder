@@ -116,6 +116,7 @@ import com.nononsenseapps.feeder.archmodel.FeedType
 import com.nononsenseapps.feeder.db.room.FeedItemCursor
 import com.nononsenseapps.feeder.db.room.ID_SAVED_ARTICLES
 import com.nononsenseapps.feeder.db.room.ID_UNSET
+import com.nononsenseapps.feeder.db.room.VulnDao
 import com.nononsenseapps.feeder.localtranslation.BergamotModelDownloadProgress
 import com.nononsenseapps.feeder.model.LocaleOverride
 import com.nononsenseapps.feeder.model.ReadAloudProgress
@@ -146,6 +147,7 @@ import com.nononsenseapps.feeder.ui.compose.navigation.EditFeedDestination
 import com.nononsenseapps.feeder.ui.compose.navigation.FeedDestination
 import com.nononsenseapps.feeder.ui.compose.navigation.SearchFeedDestination
 import com.nononsenseapps.feeder.ui.compose.navigation.SettingsDestination
+import com.nononsenseapps.feeder.ui.compose.navigation.VulnsDestination
 import com.nononsenseapps.feeder.ui.compose.pullrefresh.PullRefreshIndicator
 import com.nononsenseapps.feeder.ui.compose.pullrefresh.pullRefresh
 import com.nononsenseapps.feeder.ui.compose.pullrefresh.rememberPullRefreshState
@@ -282,8 +284,14 @@ fun FeedScreen(
         }
     }
 
+    val vulnDao: VulnDao by instance()
+    val vulnUnseenCountFlow = remember(vulnDao) { vulnDao.observeUnseenCount() }
+    val vulnUnseenCount by vulnUnseenCountFlow.collectAsStateWithLifecycle(initialValue = 0)
+
     ScreenWithNavDrawer(
         feedsAndTags = pagedNavDrawerItems,
+        vulnUnseenCount = vulnUnseenCount,
+        onVulnsClick = { VulnsDestination.navigate(navController) },
         onToggleTagExpansion = { tag ->
             viewModel.toggleTagExpansion(tag)
         },

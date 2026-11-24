@@ -22,6 +22,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navDeepLink
 import com.nononsenseapps.feeder.base.diAwareViewModel
 import com.nononsenseapps.feeder.db.room.ID_UNSET
+import com.nononsenseapps.feeder.db.room.VulnDao
 import com.nononsenseapps.feeder.ui.MainActivityViewModel
 import com.nononsenseapps.feeder.ui.NavigationDeepLinkViewModel
 import com.nononsenseapps.feeder.ui.compose.editfeed.CreateFeedScreen
@@ -38,6 +39,8 @@ import com.nononsenseapps.feeder.ui.compose.sync.SyncScreen
 import com.nononsenseapps.feeder.ui.compose.sync.SyncScreenViewModel
 import com.nononsenseapps.feeder.util.DEEP_LINK_BASE_URI
 import com.nononsenseapps.feeder.util.logDebug
+import com.nononsenseapps.feeder.vulns.VulnsScreen
+import org.kodein.di.compose.instance
 
 private const val LOG_TAG = "FEEDER_NAV"
 
@@ -473,8 +476,11 @@ data object ArticleDestination : NavigationDestination(
         val navigationDeepLinkViewModel: NavigationDeepLinkViewModel =
             backStackEntry.diAwareViewModel()
 
+        val vulnDao: VulnDao by instance()
         LaunchedEffect(itemId) {
             navigationDeepLinkViewModel.setCurrentArticle(itemId = itemId)
+            // Opening an article clears its alert in the Vulnerabilities tab
+            vulnDao.markSeenForItem(itemId)
         }
 
         ArticleScreen(
@@ -489,6 +495,41 @@ data object ArticleDestination : NavigationDestination(
             viewModel = backStackEntry.diAwareViewModel(),
             mainActivityViewModel = mainActivityViewModel,
             onNavigateToArticle = { ArticleDestination.navigate(navController, it) },
+        )
+    }
+}
+
+data object VulnsDestination : NavigationDestination(
+    path = "vulns",
+    navArguments = emptyList(),
+    deepLinks =
+        listOf(
+            navDeepLink {
+                uriPattern = "$DEEP_LINK_BASE_URI/vulns"
+            },
+        ),
+) {
+    fun navigate(navController: NavController) {
+        navController.navigate(path) {
+            launchSingleTop = true
+        }
+    }
+
+    @Composable
+    override fun RegisterScreen(
+        navController: NavController,
+        backStackEntry: NavBackStackEntry,
+        navDrawerListState: LazyListState,
+        mainActivityViewModel: MainActivityViewModel,
+    ) {
+        VulnsScreen(
+            viewModel = backStackEntry.diAwareViewModel(),
+            onNavigateUp = {
+                if (!navController.popBackStack()) {
+                    FeedDestination.navigate(navController)
+                }
+            },
+            onOpenArticle = { itemId -> ArticleDestination.navigate(navController, itemId) },
         )
     }
 }

@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="vuln_tab_title">Vulnerabilities</string>
+  <string name="vuln_alerts">Alerts</string>
+  <string name="vuln_my_stack">My stack</string>
+  <string name="vuln_channel_name">Vulnerability alerts</string>
+  <string name="vuln_channel_description">Security issues that match your tech stack</string>
+
+  <string name="vuln_severity_critical">Critical</string>
+  <string name="vuln_severity_high">High</string>
+  <string name="vuln_severity_medium">Medium</string>
+  <string name="vuln_severity_low">Low</string>
+  <string name="vuln_severity_unknown">Unrated</string>
+  <string name="vuln_exploited">Exploited</string>
+
+  <string name="vuln_version_affected">Your version looks affected</string>
+  <string name="vuln_version_not_affected">Your version looks not affected</string>
+  <string name="vuln_version_unknown">Version impact unknown</string>
+
+  <string name="vuln_no_stack_title">Add your tech stack</string>
+  <string name="vuln_no_stack_body">Add the products you run, like Jira, Nginx or Node.js. Every article from your feeds that mentions one of them together with a vulnerability shows up here.</string>
+  <string name="vuln_no_alerts">No matching vulnerabilities in your feeds yet. Subscribe to security feeds (vendor advisories, CISA, security news) to get more coverage.</string>
+  <string name="vuln_all">All</string>
+  <string name="vuln_hide_not_affected">Hide not affected</string>
+  <string name="vuln_mark_all_seen">Mark all as seen</string>
+  <string name="vuln_dismiss">Dismiss</string>
+  <string name="vuln_dismissed">Alert dismissed</string>
+  <string name="vuln_undo">Undo</string>
+  <string name="vuln_rescanning">Scanning stored articles…</string>
+  <string name="vuln_rescan">Rescan articles</string>
+
+  <string name="vuln_add_stack_item">Add stack item</string>
+  <string name="vuln_edit_stack_item">Edit stack item</string>
+  <string name="vuln_name">Name</string>
+  <string name="vuln_name_hint">e.g. Jira</string>
+  <string name="vuln_aliases">Aliases (comma separated)</string>
+  <string name="vuln_aliases_hint">e.g. Atlassian Jira, jira-software</string>
+  <string name="vuln_version">Your version (optional)</string>
+  <string name="vuln_version_hint">e.g. 9.12.1</string>
+  <string name="vuln_alert_level">Notify me</string>
+  <string name="vuln_alert_critical_high">For critical, high and exploited issues</string>
+  <string name="vuln_alert_all">For every match</string>
+  <string name="vuln_alert_none">Never (only show in the tab)</string>
+  <string name="vuln_save">Save</string>
+  <string name="vuln_cancel">Cancel</string>
+  <string name="vuln_delete">Delete</string>
+  <string name="vuln_matching_help">Matching is case-insensitive on whole words in the title and body. Spaces, hyphens and underscores are treated the same.</string>
+  <string name="vuln_notification_permission">Allow notifications to be alerted about critical and high vulnerabilities.</string>
+  <string name="vuln_allow">Allow</string>
+  <string name="vuln_cvss">CVSS %1$s</string>
+  <string name="vuln_matched_via">Matched \"%1$s\"</string>
+</resources>

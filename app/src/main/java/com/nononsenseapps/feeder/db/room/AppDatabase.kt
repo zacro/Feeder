@@ -50,11 +50,13 @@ private const val LOG_TAG = "FEEDER_APPDB"
         RemoteReadMark::class,
         RemoteFeed::class,
         SyncDevice::class,
+        VulnStackItem::class,
+        VulnMatchEntity::class,
     ],
     views = [
         FeedsWithItemsForNavDrawer::class,
     ],
-    version = 41,
+    version = 42,
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -73,6 +75,8 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun remoteFeedDao(): RemoteFeedDao
 
     abstract fun syncDeviceDao(): SyncDeviceDao
+
+    abstract fun vulnDao(): VulnDao
 
     companion object {
         // For Singleton instantiation
@@ -140,6 +144,7 @@ fun getAllMigrations(di: DI) =
         MIGRATION_38_39,
         MIGRATION_39_40,
         MIGRATION_40_41,
+        MIGRATION_41_42,
     )
 
 /*
@@ -239,6 +244,35 @@ object MIGRATION_40_41 : Migration(40, 41) {
         db.execSQL(
             """
             ALTER TABLE feeds ADD COLUMN trust_all_certificates INTEGER NOT NULL DEFAULT 0
+            """.trimIndent(),
+        )
+    }
+}
+
+/**
+ * Added tables for the Vulnerabilities tab (tech stack items and their article matches).
+ */
+@Suppress("ClassName")
+object MIGRATION_41_42 : Migration(41, 42) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `vuln_stack_items` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `aliases` TEXT NOT NULL, `version` TEXT NOT NULL, `alert_level` INTEGER NOT NULL)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            CREATE TABLE IF NOT EXISTS `vuln_matches` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `feed_item_id` INTEGER NOT NULL, `stack_item_id` INTEGER NOT NULL, `severity` INTEGER NOT NULL, `cvss` REAL, `cves` TEXT NOT NULL, `exploited` INTEGER NOT NULL, `version_status` INTEGER NOT NULL, `matched_term` TEXT NOT NULL, `notified` INTEGER NOT NULL, `seen` INTEGER NOT NULL, `dismissed` INTEGER NOT NULL, `matched_at` INTEGER NOT NULL, FOREIGN KEY(`feed_item_id`) REFERENCES `feed_items`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`stack_item_id`) REFERENCES `vuln_stack_items`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS `index_vuln_matches_feed_item_id_stack_item_id` ON `vuln_matches` (`feed_item_id`, `stack_item_id`)
+            """.trimIndent(),
+        )
+        db.execSQL(
+            """
+            CREATE INDEX IF NOT EXISTS `index_vuln_matches_stack_item_id` ON `vuln_matches` (`stack_item_id`)
             """.trimIndent(),
         )
     }

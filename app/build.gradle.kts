@@ -37,7 +37,7 @@ android {
             .toInt()
 
     defaultConfig {
-        applicationId = "com.nononsenseapps.feeder"
+        applicationId = "com.nononsenseapps.feeder.stackwatch"
         // The version fields are set with actual values to support F-Droid
         // In Play variant, they are overridden and taken from git to support alpha/beta testing.
         // For actual releases they match.

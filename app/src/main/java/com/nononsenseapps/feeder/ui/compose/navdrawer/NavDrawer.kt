@@ -71,6 +71,7 @@ import com.nononsenseapps.feeder.ui.compose.material3.DismissibleNavigationDrawe
 import com.nononsenseapps.feeder.ui.compose.material3.DrawerState
 import com.nononsenseapps.feeder.ui.compose.utils.onKeyEventLikeEscape
 import com.nononsenseapps.feeder.util.logDebug
+import com.nononsenseapps.feeder.vulns.VulnsDrawerItem
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalAnimationApi::class)
@@ -83,6 +84,8 @@ fun ScreenWithNavDrawer(
     focusRequester: FocusRequester,
     navDrawerListState: LazyListState,
     modifier: Modifier = Modifier,
+    vulnUnseenCount: Int = 0,
+    onVulnsClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
     val coroutineScope = rememberCoroutineScope()
@@ -117,6 +120,16 @@ fun ScreenWithNavDrawer(
                     modifier =
                         Modifier
                             .focusRequester(focusRequester),
+                    vulnUnseenCount = vulnUnseenCount,
+                    onVulnsClick =
+                        onVulnsClick?.let { onClick ->
+                            {
+                                coroutineScope.launch {
+                                    onClick()
+                                    drawerState.close()
+                                }
+                            }
+                        },
                 )
             }
         },
@@ -132,6 +145,8 @@ fun ListOfFeedsAndTags(
     state: LazyListState,
     onItemClick: (FeedIdTag) -> Unit,
     modifier: Modifier = Modifier,
+    vulnUnseenCount: Int = 0,
+    onVulnsClick: (() -> Unit)? = null,
 ) {
     LazyColumn(
         state = state,
@@ -144,6 +159,14 @@ fun ListOfFeedsAndTags(
                     collectionInfo = CollectionInfo(feedsAndTags.itemCount, 1)
                 },
     ) {
+        if (onVulnsClick != null) {
+            item(key = "vulns", contentType = "vulns") {
+                Column {
+                    VulnsDrawerItem(unseenCount = vulnUnseenCount, onClick = onVulnsClick)
+                    HorizontalDivider(modifier = Modifier.fillMaxWidth())
+                }
+            }
+        }
         items(
             count = feedsAndTags.itemCount,
             key =

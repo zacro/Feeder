@@ -22,6 +22,8 @@ import com.nononsenseapps.feeder.util.right
 import com.nononsenseapps.feeder.util.sloppyLinkToStrictURLNoThrows
 import com.nononsenseapps.feeder.util.urlHasNoAuthParams
 import com.nononsenseapps.feeder.util.urlHasNoQueryParams
+import com.nononsenseapps.feeder.vulns.ScanInput
+import com.nononsenseapps.feeder.vulns.VulnScanner
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -61,6 +63,7 @@ class RssLocalSync(
     private val okHttpClient: OkHttpClient by instance()
     private val filePathProvider: FilePathProvider by instance()
     private val application: Application by instance()
+    private val vulnScanner: VulnScanner by instance()
 
     suspend fun syncFeeds(
         feedId: Long = ID_UNSET,
@@ -420,7 +423,12 @@ class RssLocalSync(
                                 item != existingItemsById[item.id] ||
                                 !articleContentMatches(item.id, text)
                         }
+                    val vulnScanInputs = mutableListOf<ScanInput>()
                     repository.upsertFeedItems(changedItems) { feedItem, text ->
+                        // Inserts use IGNORE so a skipped row comes back with id -1
+                        if (feedItem.id > ID_UNSET) {
+                            vulnScanInputs += ScanInput(feedItem.id, feedItem.plainTitle, text)
+                        }
                         filePathProvider.articleDir.mkdirs()
                         blobOutputStream(feedItem.id, filePathProvider.articleDir)
                             .bufferedWriter()
@@ -433,6 +441,9 @@ class RssLocalSync(
                             repository.setSynced(feedItem.id)
                         }
                     }
+                    // Match new/changed articles against the user's tech stack (Vulnerabilities tab)
+                    vulnScanner.scanSyncedItems(vulnScanInputs)
+
                     // Try to look for image if not done before
                     if (feedSql.imageUrl == null && feedSql.siteFetched == Instant.EPOCH) {
                         val siteUrl =
