@@ -49,4 +49,10 @@
   <string name="vuln_allow">Allow</string>
   <string name="vuln_cvss">CVSS %1$s</string>
   <string name="vuln_matched_via">Matched \"%1$s\"</string>
+  <string name="vuln_export_stack">Export stack</string>
+  <string name="vuln_import_stack">Import stack</string>
+  <string name="vuln_export_done">Stack exported</string>
+  <string name="vuln_export_failed">Could not export stack</string>
+  <string name="vuln_import_done">Stack imported</string>
+  <string name="vuln_import_failed">Could not import stack: not a StackWatch backup?</string>
 </resources>

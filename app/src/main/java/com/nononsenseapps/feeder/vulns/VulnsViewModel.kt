@@ -1,17 +1,25 @@
 package com.nononsenseapps.feeder.vulns
 
+import android.app.Application
+import android.net.Uri
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import com.nononsenseapps.feeder.ApplicationCoroutineScope
+import com.nononsenseapps.feeder.R
 import com.nononsenseapps.feeder.base.DIAwareViewModel
 import com.nononsenseapps.feeder.db.room.VulnAlertRow
 import com.nononsenseapps.feeder.db.room.VulnDao
 import com.nononsenseapps.feeder.db.room.VulnStackItem
+import com.nononsenseapps.feeder.util.ToastMaker
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.kodein.di.DI
 import org.kodein.di.instance
 
@@ -33,6 +41,7 @@ class VulnsViewModel(
     private val vulnDao: VulnDao by instance()
     private val vulnScanner: VulnScanner by instance()
     private val applicationCoroutineScope: ApplicationCoroutineScope by instance()
+    private val toastMaker: ToastMaker by instance()
 
     private val stackFilter = MutableStateFlow<Long?>(null)
     private val hideNotAffected = MutableStateFlow(false)
@@ -123,6 +132,55 @@ class VulnsViewModel(
         applicationCoroutineScope.launch { vulnDao.markAllSeen() }
     }
 
+    fun exportStack(uri: Uri) {
+        applicationCoroutineScope.launch {
+            try {
+                val text = StackBackup.encode(vulnDao.getStackItems())
+                withContext(Dispatchers.IO) {
+                    getApplication<Application>()
+                        .contentResolver
+                        .openOutputStream(uri, "wt")
+                        ?.bufferedWriter()
+                        ?.use { it.write(text) }
+                        ?: error("Could not open file")
+                }
+                toastMaker.makeToast(R.string.vuln_export_done)
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Log.e(LOG_TAG, "Stack export failed", e)
+                toastMaker.makeToast(R.string.vuln_export_failed)
+            }
+        }
+    }
+
+    fun importStack(uri: Uri) {
+        applicationCoroutineScope.launch {
+            try {
+                val text =
+                    withContext(Dispatchers.IO) {
+                        getApplication<Application>()
+                            .contentResolver
+                            .openInputStream(uri)
+                            ?.bufferedReader()
+                            ?.use { it.readText() }
+                            ?: error("Could not open file")
+                    }
+                val imported = StackBackup.decode(text)
+                val (toUpdate, toInsert) = StackBackup.merge(vulnDao.getStackItems(), imported)
+                toUpdate.forEach { vulnDao.updateStackItem(it) }
+                toInsert.forEach { vulnDao.insertStackItem(it) }
+                toastMaker.makeToast(R.string.vuln_import_done)
+                if (toUpdate.isNotEmpty() || toInsert.isNotEmpty()) {
+                    rescan()
+                }
+            } catch (e: Exception) {
+                if (e is CancellationException) throw e
+                Log.e(LOG_TAG, "Stack import failed", e)
+                toastMaker.makeToast(R.string.vuln_import_failed)
+            }
+        }
+    }
+
     fun requestRescan() {
         applicationCoroutineScope.launch { rescan() }
     }
@@ -136,3 +194,5 @@ class VulnsViewModel(
         }
     }
 }
+
+private const val LOG_TAG = "FEEDER_VULNS_VM"

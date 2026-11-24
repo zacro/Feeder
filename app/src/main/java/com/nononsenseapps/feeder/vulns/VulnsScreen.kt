@@ -39,6 +39,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DoneAll
+import androidx.compose.material.icons.filled.FileDownload
+import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.outlined.Security
 import androidx.compose.material3.AlertDialog
@@ -124,6 +126,15 @@ fun VulnsScreen(
 
     var editing by remember { mutableStateOf<VulnStackItem?>(null) }
 
+    val exportLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument(StackBackup.MIME_TYPE)) { uri ->
+            if (uri != null) viewModel.exportStack(uri)
+        }
+    val importLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            if (uri != null) viewModel.importStack(uri)
+        }
+
     val dismissedText = stringResource(R.string.vuln_dismissed)
     val undoText = stringResource(R.string.vuln_undo)
 
@@ -149,6 +160,17 @@ fun VulnsScreen(
                 actions = {
                     IconButton(onClick = viewModel::requestRescan, enabled = !viewState.rescanning) {
                         Icon(Icons.Default.Refresh, contentDescription = stringResource(R.string.vuln_rescan))
+                    }
+                    if (tab == TAB_STACK) {
+                        IconButton(onClick = { importLauncher.launch(arrayOf(StackBackup.MIME_TYPE, "text/plain", "application/octet-stream")) }) {
+                            Icon(Icons.Default.FileDownload, contentDescription = stringResource(R.string.vuln_import_stack))
+                        }
+                        IconButton(
+                            onClick = { exportLauncher.launch(StackBackup.DEFAULT_FILE_NAME) },
+                            enabled = viewState.stackItems.isNotEmpty(),
+                        ) {
+                            Icon(Icons.Default.FileUpload, contentDescription = stringResource(R.string.vuln_export_stack))
+                        }
                     }
                     if (tab == TAB_ALERTS) {
                         IconButton(onClick = viewModel::markAllSeen) {
