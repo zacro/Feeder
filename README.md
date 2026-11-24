@@ -1,3 +1,47 @@
+# Feeder StackWatch
+
+> **This is an unofficial fork of [Feeder](https://github.com/spacecowboy/Feeder) by Jonas Kalderstam (spacecowboy).**
+> It is not affiliated with or endorsed by the Feeder project. Please report problems with this fork
+> [here](https://github.com/zacro/Feeder/issues), not upstream.
+
+StackWatch is Feeder plus a **Vulnerabilities** tab: tell it which products you run, and it flags
+articles from your existing feeds that report security issues in them.
+
+- **My stack:** add products with aliases (e.g. `Jira` / `Atlassian Jira`, `jira-software`) and,
+  optionally, the version you run.
+- **Alerts:** articles that mention a stack item *and* look security related (CVE ids, "vulnerability",
+  "RCE", "actively exploited", …). Matching is case-insensitive on whole words in title and body.
+- **Severity & impact:** CVSS score or wording (critical/high/…), CVE ids, exploited-in-the-wild flag,
+  and a best-effort "your version looks affected / not affected" check.
+- **Notifications** for critical, high and exploited issues (configurable per item), on their own channel.
+- **Export/import** of your stack as JSON.
+
+Everything else is Feeder as you know it: offline, no accounts, no Google services. The optional
+Sync feature is disabled in this fork.
+
+### Install
+
+- **[Obtainium](https://github.com/ImranR98/Obtainium)** (recommended, gets updates automatically):
+  add `https://github.com/zacro/Feeder`.
+- Or download the APK from [Releases](https://github.com/zacro/Feeder/releases).
+
+Installs next to the official Feeder (app id `io.github.zacro.stackwatch`). Releases are signed with
+the fork's own key, so they can't replace or be replaced by official Feeder builds.
+
+### Building
+
+Same as upstream (see below): `./gradlew assembleFdroidRelease`. Fork changes live on the
+`stackwatch` branch; most of the new code is in `app/src/main/java/com/nononsenseapps/feeder/vulns/`.
+
+### License
+
+GPL-3.0, same as Feeder. All credit for the underlying app goes to the Feeder authors and contributors;
+consider [supporting the original project](https://ko-fi.com/spacecowboy).
+
+---
+
+*The original Feeder README follows.*
+
 Feeder
 =====
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/Y8Y44OYQL)
