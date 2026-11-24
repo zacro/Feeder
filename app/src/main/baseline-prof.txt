@@ -1,0 +1,6 @@
+# StackWatch: baseline profile for the app's own code.
+# Sideloaded/Obtainium installs get no Play cloud profiles, so without this the app's own
+# classes run interpreted/JIT after every update until the device's idle compilation.
+# Wildcards cover all app code; R8 rewrites these rules to the obfuscated names.
+HSPLcom/nononsenseapps/**->**(**)**
+Lcom/nononsenseapps/**;
