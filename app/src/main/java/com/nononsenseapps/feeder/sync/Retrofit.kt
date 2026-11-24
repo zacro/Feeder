@@ -1,6 +1,7 @@
 package com.nononsenseapps.feeder.sync
 
 import com.nononsenseapps.feeder.db.room.SyncRemote
+import com.nononsenseapps.feeder.db.room.isBlockedSyncHost
 import com.nononsenseapps.feeder.util.logDebug
 import okhttp3.Credentials
 import okhttp3.OkHttpClient
@@ -21,6 +22,14 @@ fun getFeederSyncClient(
             .client(
                 okHttpClient
                     .newBuilder()
+                    // StackWatch: never talk to the original author's sync server
+                    .addInterceptor { chain ->
+                        val host = chain.request().url.host
+                        if (isBlockedSyncHost(host)) {
+                            throw java.io.IOException("Sync server $host is disabled in this build")
+                        }
+                        chain.proceed(chain.request())
+                    }
                     // Auth only used to prevent automatic scanning of the API
                     .addInterceptor { chain ->
                         chain.proceed(

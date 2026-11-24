@@ -89,6 +89,7 @@ import com.nononsenseapps.feeder.archmodel.SortingOptions
 import com.nononsenseapps.feeder.archmodel.SwipeAsRead
 import com.nononsenseapps.feeder.archmodel.SyncFrequency
 import com.nononsenseapps.feeder.archmodel.ThemeOptions
+import com.nononsenseapps.feeder.db.room.SYNC_FEATURE_ENABLED
 import com.nononsenseapps.feeder.localtranslation.LanguagePairInfo
 import com.nononsenseapps.feeder.ui.compose.components.SwitchExpressive
 import com.nononsenseapps.feeder.ui.compose.components.safeSemantics
@@ -661,13 +662,16 @@ fun SettingsList(
                 },
             )
 
-            ExternalSetting(
-                currentValue = "",
-                title = stringResource(id = R.string.device_sync),
-                {
-                    onOpenSyncSettings()
-                },
-            )
+            // StackWatch: hidden until a self-hosted sync server is supported
+            if (SYNC_FEATURE_ENABLED) {
+                ExternalSetting(
+                    currentValue = "",
+                    title = stringResource(id = R.string.device_sync),
+                    {
+                        onOpenSyncSettings()
+                    },
+                )
+            }
         }
 
         HorizontalDivider(modifier = Modifier.width(dimens.maxContentWidth))

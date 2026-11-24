@@ -46,7 +46,12 @@ data class SyncRemote
         fun notHasSyncChain() = !hasSyncChain()
     }
 
-private const val DEFAULT_SERVER_HOST = "feeder-sync.nononsenseapps.com"
+/**
+ * StackWatch: sync is disabled until a self-hosted server is configured.
+ * ".invalid" is a reserved TLD that never resolves, so nothing is contacted.
+ */
+const val SYNC_FEATURE_ENABLED = false
+private const val DEFAULT_SERVER_HOST = "sync.invalid"
 private const val DEFAULT_SERVER_PORT = 443
 const val DEFAULT_SERVER_ADDRESS = "https://$DEFAULT_SERVER_HOST:$DEFAULT_SERVER_PORT"
 
@@ -54,7 +59,15 @@ val DEPRECATED_SYNC_HOSTS =
     listOf(
         "feederapp.nononsenseapps.com",
         "feeder-sync.nononsenseapps.workers.dev",
+        // StackWatch: the original author's server, never contacted by this fork
+        "feeder-sync.nononsenseapps.com",
     )
+
+/** StackWatch: hosts the sync client refuses to connect to. */
+fun isBlockedSyncHost(host: String): Boolean =
+    host.endsWith(".invalid") ||
+        host == "feeder-sync.nononsenseapps.com" ||
+        DEPRECATED_SYNC_HOSTS.any { it == host }
 
 fun generateDeviceName(): String {
     val manufacturer = Build.MANUFACTURER ?: ""
