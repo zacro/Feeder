@@ -123,7 +123,13 @@ android {
         productFlavors {
             create("fdroid") {
                 dimension = "store"
-                // Keeping default version values for F-Droid
+                // StackWatch: own version numbers so each fork release installs as an update.
+                // versionCode = upstream code * 100 + revision, so merging a newer upstream
+                // always yields a higher code. Bump stackwatchRevision for every fork release;
+                // reset it to 1 after merging an upstream version bump.
+                val stackwatchRevision = 1
+                versionCode = (defaultConfig.versionCode ?: 0) * 100 + stackwatchRevision
+                versionNameSuffix = "-sw$stackwatchRevision"
             }
             create("play") {
                 dimension = "store"
